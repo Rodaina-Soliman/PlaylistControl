@@ -4,3 +4,29 @@ GET {{PlaylistControl_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+GET {{PlaylistControl_HostAddress}}/user/
+Accept: application/json
+
+###
+
+GET {{PlaylistControl_HostAddress}}/song/
+Accept: application/json
+
+###
+
+GET {{PlaylistControl_HostAddress}}/user/1/
+Accept: application/json
+
+###
+GET {{PlaylistControl_HostAddress}}/song/1/
+Accept: application/json
+
+###
+GET {{PlaylistControl_HostAddress}}/song/1/details/
+Accept: application/json
+
+###
+
+GET {{PlaylistControl_HostAddress}}/playlist/1/songs
+Accept: application/json
