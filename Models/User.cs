@@ -11,9 +11,8 @@ public class User
     public ICollection<UserPlaylist>? UserPlaylists { get; set; } = new List<UserPlaylist>();
 
     public User(){}
-    public User(int id, string name)
+    public User(string name)
     {
-        Id = id;
         Name = name;
     }
 

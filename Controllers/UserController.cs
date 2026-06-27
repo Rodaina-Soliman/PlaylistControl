@@ -11,9 +11,13 @@ public class UserController : ControllerBase
 {
 
     private UserService _userService;
-    public UserController(UserService userService)
+    private PlaylistService _playlistService;
+    private SongService _songService;
+    public UserController(UserService userService, SongService songService, PlaylistService playlistService)
     {
         _userService = userService;
+        _playlistService = playlistService;
+        _songService = songService;
     }
 
     // GET all action
@@ -61,6 +65,18 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    // POST add a playlist to user action
+    [HttpPost("{userId}/playlists/{playlistId}")]
+    public async Task<ActionResult> AddPlaylistForUser(int userId, int playlistId)
+    {
+        var user = await _userService.GetUserById(userId);
+        var playlist = await _playlistService.GetPlaylistById(playlistId);
+        if(user == null || playlist == null)
+            return NotFound();
+        await _userService.AddPlaylistForUser(userId, playlistId);
+        return Ok();
+    }
+
     // DELETE remove playlist from user action
     [HttpDelete("{userId}/playlists/{playlistId}")]
     public async Task<ActionResult> RemovePlaylistFromUser(int userId, int playlistId)
@@ -75,6 +91,57 @@ public class UserController : ControllerBase
             return NotFound();
 
         await _userService.RemovePlaylistFromUser(userId, playlistId);
+        return Ok();
+    }
+
+    // Add song to playlist action
+    [HttpPost("{userId}/songs/{songId}/addToPlaylist/{playlistId}")]
+    public async Task<ActionResult> AddSongToPlaylist(int songId, int playlistId, int userId)
+    {
+        var song = await _songService.GetSongById(songId);
+        var playlist = await _playlistService.GetPlaylistById(playlistId);
+        var belongsToUser = await _userService.PlaylistBelongsToUser(playlistId, userId);
+
+        if(song == null || playlist == null || !belongsToUser)
+            return NotFound();
+
+        await _playlistService.AddSongToPlaylist(playlistId, songId);
+        return Ok();
+    }
+
+    // Remove song from playlist action
+    [HttpDelete("{userId}/playlists/{playlistId}/RemoveFromPlaylist/{songId}")]
+    public async Task<ActionResult> RemoveSongFromPlaylist(int playlistId, int songId, int userId)
+    {
+        var playlist = await _playlistService.GetPlaylistById(playlistId);
+        var song = await _songService.GetSongById(songId);
+        var belongsToUser = await _userService.PlaylistBelongsToUser(playlistId, userId);
+
+        if(playlist == null || song == null || !belongsToUser)
+            return NotFound();
+
+        await _playlistService.RemoveSongFromPlaylist(playlistId, songId);
+        return Ok();
+    }
+
+    // Add user to database
+    [HttpPost]
+    public async Task<ActionResult> AddUser([FromBody] User user)
+    {
+        await _userService.Add(user);
+        return Ok();
+    }
+
+    //Delete user from database
+    [HttpDelete("{userId}")]
+    public async Task<ActionResult> DeleteSong(int userId)
+    {
+        var user = await _userService.GetUserById(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        await _userService.Delete(userId);
         return Ok();
     }
 

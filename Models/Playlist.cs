@@ -18,13 +18,11 @@ public class Playlist
     public ICollection<SongPlaylist>? SongPlaylists { get; set; } = new List<SongPlaylist>();
 
     public Playlist(){}
-    public Playlist(int id, string? name, string? description, int creatorId, User creator)
+    public Playlist(string? name, string? description, int creatorId)
     {
-        Id = id;
         Name = name;
         Description = description;
         CreatorId = creatorId;
-        Creator = creator;
     }
 
 }

@@ -16,9 +16,8 @@ public class Song
     public ICollection<SongPlaylist>? SongPlaylists { get; set; } = new List<SongPlaylist>();
 
     public Song(){}
-    public Song(int id, string title, string artist, string album, int year, string genre)
+    public Song(string title, string artist, string album, int year, string genre)
     {
-        Id = id;
         Title = title;
         Artist = artist;
         Album = album;

@@ -22,6 +22,7 @@ public class SongController : ControllerBase
     public async Task<ActionResult<ICollection<Song>>> GetAll()
     {
         var songs = await _songService.GetAll();
+        if (!songs.Any()) return NotFound();
         return Ok(songs);
     }
 
@@ -45,18 +46,25 @@ public class SongController : ControllerBase
         return Ok(_songService.GetSongDetails(song));
     }
 
-    // Add song to playlist action
-    [HttpPost("{songId}/addToPlaylist/{playlistId}")]
-    public async Task<ActionResult> AddSongToPlaylist(int songId, int playlistId)
+    // Add song to database
+    [HttpPost]
+    public async Task<ActionResult> AddSong([FromBody] Song song)
     {
-        var song = await _songService.GetSongById(songId);
-        var playlist = await _playlistService.GetPlaylistById(playlistId);
-
-        if(song == null || playlist == null)
-            return NotFound();
-
-        await _playlistService.AddSongToPlaylist(playlistId, songId);
+        await _songService.AddSong(song);
         return Ok();
     }
-    
+
+    //Delete song from database
+    [HttpDelete("{songId}")]
+    public async Task<ActionResult> DeleteSong(int songId)
+    {
+        var song = await _songService.GetSongById(songId);
+        if (song == null)
+        {
+            return NotFound();
+        }
+        await _songService.DeleteSong(songId);
+        return Ok();
+    }
+
 }

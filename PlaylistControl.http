@@ -3,34 +3,84 @@
 GET {{PlaylistControl_HostAddress}}/weatherforecast/
 Accept: application/json
 
-###
+### Inserting users
 
 POST {{PlaylistControl_HostAddress}}/user/
+Content-Type: application/json
 
-###
+{
+    "Name": "User 3"
+}
+
+### Getting users
 
 GET {{PlaylistControl_HostAddress}}/user/
 Accept: application/json
 
-###
+### Deleting users
+DELETE {{PlaylistControl_HostAddress}}/user/1/
+Accept: application/json
 
+### Creating playlists
+POST {{PlaylistControl_HostAddress}}/user/3/playlists/
+Content-Type: application/json
+
+{
+    "Name": "Playlist 3",
+    "Description": "Playful and energetic"
+}
+
+### Adding playlist
+POST {{PlaylistControl_HostAddress}}/user/2/playlists/11/
+Accept: application/json
+
+### Getting user playlists
+GET {{PlaylistControl_HostAddress}}/user/2/playlists/
+Accept: application/json
+
+### Removing user playlists
+DELETE {{PlaylistControl_HostAddress}}/user/2/playlists/11/
+Accept: application/json
+
+### Adding songs
+POST {{PlaylistControl_HostAddress}}/song/
+Content-Type: application/json
+
+{
+    "Title": "Over the horizon",
+    "Artist": "Samsung",
+    "Album": "Ringtones",
+    "Year": 2026,
+    "Genre": "Fun"
+}
+
+### Getting songs
 GET {{PlaylistControl_HostAddress}}/song/
 Accept: application/json
 
-###
-
-GET {{PlaylistControl_HostAddress}}/user/1/
-Accept: application/json
-
-###
-GET {{PlaylistControl_HostAddress}}/song/1/
-Accept: application/json
-
-###
+### Getting song details
 GET {{PlaylistControl_HostAddress}}/song/1/details/
 Accept: application/json
 
-###
+### Delete song
+DELETE  {{PlaylistControl_HostAddress}}/song/1
+Accept: application/json
 
-GET {{PlaylistControl_HostAddress}}/playlist/1/songs
+### Add song to playlist
+POST {{PlaylistControl_HostAddress}}/user/2/songs/2/addToPlaylist/13/
+
+### Getting songs in playlist
+GET {{PlaylistControl_HostAddress}}/playlist/13/songs/
+Accept: application/json
+
+### Remove song from playlist
+DELETE {{PlaylistControl_HostAddress}}/user/2/playlists/13/RemoveFromPlaylist/2/
+Accept: application/json
+
+### Getting playlists
+GET {{PlaylistControl_HostAddress}}/playlist/
+Accept: application/json
+
+### Getting playlists by id
+GET {{PlaylistControl_HostAddress}}/playlist/14/
 Accept: application/json

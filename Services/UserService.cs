@@ -1,6 +1,8 @@
 namespace PlaylistControl.Services;
 
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Update.Internal;
 using PlaylistControl.Data;
 using PlaylistControl.Models;
 
@@ -44,16 +46,27 @@ public class UserService
         return await _context.UserPlaylists.Where(up => up.UserId == userId).Include(up => up.Playlist).Select(up => up.Playlist).AsNoTracking().ToListAsync() ?? new List<Playlist>();
     }
 
+    public async Task<Boolean> PlaylistBelongsToUser(int playlistId, int userId)
+    {
+        var exists = await _context.UserPlaylists.FirstOrDefaultAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
+        return exists != null;
+    }
+
     public async Task CreatePlaylistForUser(User user, Playlist playlist)
     {
-        playlist.CreatorId = user.Id;
-        playlist.Creator = user;
-        
-        await _context.Playlists.AddAsync(playlist);
+        var newPlaylist = new Playlist(playlist.Name, playlist.Description, user.Id);
+        await _context.Playlists.AddAsync(newPlaylist);
         await _context.SaveChangesAsync();
         
-        var userPlaylist = new UserPlaylist(user.Id, playlist.Id, user, playlist);
+        var userPlaylist = new UserPlaylist(user.Id, newPlaylist.Id);
         
+        await _context.UserPlaylists.AddAsync(userPlaylist);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task AddPlaylistForUser(int userId, int playlistId)
+    {
+        var userPlaylist = new UserPlaylist(userId, playlistId);
         await _context.UserPlaylists.AddAsync(userPlaylist);
         await _context.SaveChangesAsync();
     }

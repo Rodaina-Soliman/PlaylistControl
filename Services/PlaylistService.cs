@@ -23,19 +23,9 @@ public class PlaylistService
         return await _context.Playlists.FindAsync(id);
     }
 
-    public async Task AddPlaylist(Playlist playlist)
-    {
-        await _context.Playlists.AddAsync(playlist);
-        await _context.SaveChangesAsync();
-    }
-
     public async Task<List<Song>> ListSongsInPlaylist(int playlistId)
     {
-        var playlist = await GetPlaylistById(playlistId);
-        if (playlist == null)
-            return new List<Song>();
-
-        return playlist.SongPlaylists?.Select(sp => sp.Song).ToList() ?? new List<Song>();
+        return await _context.SongPlaylists.Where(sp => sp.PlaylistId == playlistId).Include(sp => sp.Song).Select(sp => sp.Song).Where(s => s != null).AsNoTracking().ToListAsync() ?? new List<Song>();
     }
 
     public async Task AddSongToPlaylist(int playlistId, int songId)
@@ -49,9 +39,7 @@ public class PlaylistService
         if (playlist.SongPlaylists == null)
             playlist.SongPlaylists = new List<SongPlaylist>();
 
-        var songPlaylist = new SongPlaylist(playlistId, songId, song, playlist);
-
-        playlist.SongPlaylists.Add(songPlaylist);
+        var songPlaylist = new SongPlaylist(songId, playlistId);
         await _context.SongPlaylists.AddAsync(songPlaylist);
         await _context.SaveChangesAsync();
     }
@@ -59,16 +47,12 @@ public class PlaylistService
     public async Task RemoveSongFromPlaylist(int playlistId, int songId)
     {
         var playlist = await _context.Playlists.FindAsync(playlistId);
+        var songplaylist = await _context.SongPlaylists.FirstOrDefaultAsync(sp => sp.SongId == songId && sp.PlaylistId == playlistId);
 
-        if (playlist == null || playlist.SongPlaylists == null)
+        if (playlist == null || songplaylist==null)
             return;
 
-        var songPlaylist = playlist.SongPlaylists.FirstOrDefault(sp => sp.SongId == songId);
-        if (songPlaylist != null)
-        {
-            playlist.SongPlaylists.Remove(songPlaylist);
-            _context.SongPlaylists.Remove(songPlaylist);
-            await _context.SaveChangesAsync();
-        }
+        _context.SongPlaylists.Remove(songplaylist);
+        await _context.SaveChangesAsync();
     }
 }

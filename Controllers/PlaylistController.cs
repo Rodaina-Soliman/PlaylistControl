@@ -17,18 +17,23 @@ public class PlaylistController : ControllerBase
         _songService = songService;
     }
 
-    // Remove song from playlist action
-    [HttpDelete("{playlistId}/removeSong/{songId}")]
-    public async Task<ActionResult> RemoveSongFromPlaylist(int playlistId, int songId)
+    // GET all action
+    [HttpGet]
+    public async Task<ActionResult> GetAll()
+    {
+        var playlists = await _playlistService.GetAll();
+        if (!playlists.Any()) return NotFound();
+        return Ok(playlists);
+    }
+
+    //GET by id action
+    [HttpGet("{playlistId}")]
+    public async Task<ActionResult> Get(int playlistId)
     {
         var playlist = await _playlistService.GetPlaylistById(playlistId);
-        var song = await _songService.GetSongById(songId);
-
-        if(playlist == null || song == null)
+        if(playlist == null)
             return NotFound();
-
-        await _playlistService.RemoveSongFromPlaylist(playlistId, songId);
-        return Ok();
+        return Ok(playlist);
     }
 
     // List songs in playlist action

@@ -13,12 +13,10 @@ public class UserPlaylist
     public Playlist? Playlist {get; set;}
     
     public UserPlaylist(){}
-    public UserPlaylist(int userId, int playlistId, User user, Playlist playlist)
+    public UserPlaylist(int userId, int playlistId)
     {
         UserId = userId;
         PlaylistId = playlistId;
-        User = user;
-        Playlist = playlist;
     }
 
 }

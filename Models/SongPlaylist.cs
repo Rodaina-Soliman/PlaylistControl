@@ -13,12 +13,10 @@ public class SongPlaylist
     public Playlist? Playlist {get; set;}
     
     public SongPlaylist(){}
-    public SongPlaylist(int songId, int playlistId, Song song, Playlist playlist)
+    public SongPlaylist(int songId, int playlistId)
     {
         SongId = songId;
         PlaylistId = playlistId;
-        Song = song;
-        Playlist = playlist;
     }
     
 }
