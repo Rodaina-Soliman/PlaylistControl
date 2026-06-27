@@ -8,35 +8,39 @@ namespace PlaylistControl.Controllers;
 [Route("[controller]")]
 public class PlaylistController : ControllerBase
 {
-    public PlaylistController()
+    private readonly PlaylistService _playlistService;
+    private readonly SongService _songService;
+
+    public PlaylistController(PlaylistService playlistService, SongService songService)
     {
+        _playlistService = playlistService;
+        _songService = songService;
     }
 
     // Remove song from playlist action
     [HttpDelete("{playlistId}/removeSong/{songId}")]
-    public ActionResult RemoveSongFromPlaylist(int playlistId, int songId)
+    public async Task<ActionResult> RemoveSongFromPlaylist(int playlistId, int songId)
     {
-        var playlist = PlaylistService.GetPlaylistById(playlistId);
-        var song = SongService.GetSongById(songId);
+        var playlist = await _playlistService.GetPlaylistById(playlistId);
+        var song = await _songService.GetSongById(songId);
 
         if(playlist == null || song == null)
             return NotFound();
 
-        PlaylistService.RemoveSongFromPlaylist(playlist, song);
+        await _playlistService.RemoveSongFromPlaylist(playlistId, songId);
         return Ok();
     }
 
     // List songs in playlist action
     [HttpGet("{playlistId}/songs")]
-    public ActionResult ListSongsInPlaylist(int playlistId)
+    public async Task<ActionResult<List<Song>>> ListSongsInPlaylist(int playlistId)
     {
-        var playlist = PlaylistService.GetPlaylistById(playlistId);
-
+        var playlist = await _playlistService.GetPlaylistById(playlistId);
         if(playlist == null)
             return NotFound();
 
-        PlaylistService.ListSongsInPlaylist(playlist);
-        return Ok();
+        var songs = await _playlistService.ListSongsInPlaylist(playlistId);
+        return Ok(songs);
     }
     
 }

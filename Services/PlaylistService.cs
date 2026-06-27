@@ -1,62 +1,74 @@
 namespace PlaylistControl.Services;
 
 using PlaylistControl.Models;
+using PlaylistControl.Data;
+using Microsoft.EntityFrameworkCore;
 
-public static class PlaylistService
+public class PlaylistService
 {
+    private readonly PlaylistControlDbContext _context;
 
-    static ICollection<Playlist> playlists = new List<Playlist>
+    public PlaylistService(PlaylistControlDbContext context)
     {
-        new Playlist(1, "Chill Vibes", "Relaxing tunes for a calm evening"),
-        new Playlist(2, "Workout Hits", "High-energy tracks to keep you moving"),
-        new Playlist(3, "Classic Rock", "Timeless rock anthems from the 70s and 80s")
-    };
-
-    public static ICollection<Playlist> GetAll()
-    {
-        return playlists;
+        _context = context;
     }
 
-    public static Playlist? GetPlaylistById(int id)
+    public async Task<ICollection<Playlist>> GetAll()
     {
-        return GetAll().FirstOrDefault(p => p.Id == id);
+        return await _context.Playlists.AsNoTracking().ToListAsync();
     }
 
-    public static void AddPlaylist(Playlist playlist)
+    public async Task<Playlist?> GetPlaylistById(int id)
     {
-        playlists.Add(playlist);
+        return await _context.Playlists.FindAsync(id);
     }
 
-    public static void ListSongsInPlaylist(Playlist playlist)
+    public async Task AddPlaylist(Playlist playlist)
     {
-        if (playlist.Songs != null && playlist.Songs.Count > 0)
+        await _context.Playlists.AddAsync(playlist);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<Song>> ListSongsInPlaylist(int playlistId)
+    {
+        var playlist = await GetPlaylistById(playlistId);
+        if (playlist == null)
+            return new List<Song>();
+
+        return playlist.SongPlaylists?.Select(sp => sp.Song).ToList() ?? new List<Song>();
+    }
+
+    public async Task AddSongToPlaylist(int playlistId, int songId)
+    {
+        var playlist = await _context.Playlists.FindAsync(playlistId);
+        var song = await _context.Songs.FindAsync(songId);
+
+        if (playlist == null || song == null)
+            return;
+
+        if (playlist.SongPlaylists == null)
+            playlist.SongPlaylists = new List<SongPlaylist>();
+
+        var songPlaylist = new SongPlaylist(playlistId, songId, song, playlist);
+
+        playlist.SongPlaylists.Add(songPlaylist);
+        await _context.SongPlaylists.AddAsync(songPlaylist);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RemoveSongFromPlaylist(int playlistId, int songId)
+    {
+        var playlist = await _context.Playlists.FindAsync(playlistId);
+
+        if (playlist == null || playlist.SongPlaylists == null)
+            return;
+
+        var songPlaylist = playlist.SongPlaylists.FirstOrDefault(sp => sp.SongId == songId);
+        if (songPlaylist != null)
         {
-            foreach (var song in playlist.Songs)
-            {
-               Console.WriteLine(SongService.GetSongDetails(song));
-            }
-        }
-        else
-        {
-            Console.WriteLine("No songs in the playlist.");
+            playlist.SongPlaylists.Remove(songPlaylist);
+            _context.SongPlaylists.Remove(songPlaylist);
+            await _context.SaveChangesAsync();
         }
     }
-
-    public static void AddSongToPlaylist(Playlist playlist, Song song)
-    {
-        if (playlist.Songs == null)
-        {
-            playlist.Songs = new List<Song>();
-        }
-        playlist.Songs.Add(song);
-    }
-
-    public static void RemoveSongFromPlaylist(Playlist playlist, Song song)
-    {
-        if (playlist.Songs != null)
-        {
-            playlist.Songs.Remove(song);
-        }
-    }
-    
 }

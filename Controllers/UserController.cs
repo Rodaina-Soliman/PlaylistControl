@@ -1,6 +1,7 @@
 using PlaylistControl.Models;
 using PlaylistControl.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace PlaylistControl.Controllers;
 
@@ -8,69 +9,73 @@ namespace PlaylistControl.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
-    public UserController()
+
+    private UserService _userService;
+    public UserController(UserService userService)
     {
+        _userService = userService;
     }
 
     // GET all action
     [HttpGet]
-    public ActionResult<ICollection<User>> GetAll() =>
-        UserService.GetAll();
+    public async Task<IActionResult> GetAll()
+    {
+        var users = await _userService.GetAll();
+        if (!users.Any()) return NotFound();
+        return Ok(users);
+    }
 
     // GET by Id action
     [HttpGet("{userId}")]
-    public ActionResult<User> Get(int userId)
+    public async Task<ActionResult> Get(int userId)
     {
-        var user = UserService.getUserById(userId);
+        var user = await _userService.GetUserById(userId);
 
         if(user == null)
             return NotFound();
 
-        return user;
+        return Ok(user);
     }
 
     // GET playlists for user action
     [HttpGet("{userId}/playlists")]
-    public ActionResult<ICollection<Playlist>> GetPlaylistsForUser(int userId)
+    public async Task<ActionResult<ICollection<Playlist>>> GetPlaylistsForUser(int userId)
     {
-        var user = UserService.getUserById(userId);
-
+        var user = await _userService.GetUserById(userId);
         if(user == null)
             return NotFound();
 
-        return Ok(UserService.ListPlaylistsForUser(user));
+        var playlists = await _userService.ListPlaylistsForUser(userId);
+        return Ok(playlists);
     }
 
     // POST create playlist for user action
     [HttpPost("{userId}/playlists")]
-    public ActionResult CreatePlaylistForUser(int userId, [FromBody] Playlist playlist)
+    public async Task<ActionResult> CreatePlaylistForUser(int userId, [FromBody] Playlist playlist)
     {
-        var user = UserService.getUserById(userId);
-
+        var user = await _userService.GetUserById(userId);
         if(user == null)
             return NotFound();
 
-        UserService.CreatePlaylistForUser(user, playlist.Id, playlist.Name, playlist.Description);
+        await _userService.CreatePlaylistForUser(user, playlist);
         return Ok();
     }
 
     // DELETE remove playlist from user action
     [HttpDelete("{userId}/playlists/{playlistId}")]
-    public ActionResult RemovePlaylistFromUser(int userId, int playlistId)
+    public async Task<ActionResult> RemovePlaylistFromUser(int userId, int playlistId)
     {
-        var user = UserService.getUserById(userId);
-
+        var user = await _userService.GetUserById(userId);
         if(user == null)
             return NotFound();
 
-        var playlist = user.Playlists?.FirstOrDefault(p => p.Id == playlistId);
+        var playlists = await _userService.ListPlaylistsForUser(userId);
+        var playlist = playlists?.FirstOrDefault(p => p.Id == playlistId);
         if(playlist == null)
             return NotFound();
 
-        UserService.RemovePlaylistFromUser(user, playlist);
+        await _userService.RemovePlaylistFromUser(userId, playlistId);
         return Ok();
     }
 
-
-    
 }

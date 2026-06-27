@@ -5,6 +5,10 @@ Accept: application/json
 
 ###
 
+POST {{PlaylistControl_HostAddress}}/user/
+
+###
+
 GET {{PlaylistControl_HostAddress}}/user/
 Accept: application/json
 

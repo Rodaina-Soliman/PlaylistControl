@@ -1,57 +1,78 @@
 namespace PlaylistControl.Services;
 
+using Microsoft.EntityFrameworkCore;
+using PlaylistControl.Data;
 using PlaylistControl.Models;
 
-public static class UserService
+public class UserService
 {
 
-    public static List<User> GetAll()
+    private readonly PlaylistControlDbContext _context;
+
+    public UserService(PlaylistControlDbContext context)
     {
-        return new List<User>
-        {
-            new User { Name = "User 1", Id = 1 },
-            new User { Name = "User 2", Id = 2 },
-            new User { Name = "User 3", Id = 3 }
-        };
+        _context = context;
     }
 
-    public static User? getUserById(int id)
+    public async Task Add(User user)
     {
-        return GetAll().FirstOrDefault(u => u.Id == id);
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
     }
 
-    public static ICollection<Playlist> ListPlaylistsForUser(User user)
+    public async Task Delete(int id)
     {
-        if (user.Playlists != null && user.Playlists.Count > 0)
+        User? user = await _context.Users.FindAsync(id);
+        if (user==null)
+            return;
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<User>> GetAll()
+    {
+        return await _context.Users.AsNoTracking().ToListAsync();
+    }
+
+    public async Task<User?> GetUserById(int id)
+    {
+        return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public async Task<ICollection<Playlist>> ListPlaylistsForUser(int userId)
+    {
+        return await _context.UserPlaylists.Where(up => up.UserId == userId).Include(up => up.Playlist).Select(up => up.Playlist).AsNoTracking().ToListAsync() ?? new List<Playlist>();
+    }
+
+    public async Task CreatePlaylistForUser(User user, Playlist playlist)
+    {
+        playlist.CreatorId = user.Id;
+        playlist.Creator = user;
+        
+        await _context.Playlists.AddAsync(playlist);
+        await _context.SaveChangesAsync();
+        
+        var userPlaylist = new UserPlaylist(user.Id, playlist.Id, user, playlist);
+        
+        await _context.UserPlaylists.AddAsync(userPlaylist);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RemovePlaylistFromUser(int userId, int playlistId)
+    {
+        var userPlaylist = await _context.UserPlaylists.FirstOrDefaultAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
+        
+        if (userPlaylist != null)
         {
-            foreach (var playlist in user.Playlists)
-            {
-                Console.WriteLine($"Playlist: {playlist.Name}, Description: {playlist.Description}");
-            }
+            _context.UserPlaylists.Remove(userPlaylist);
+            await _context.SaveChangesAsync();
         }
-        else
+        
+        var playlist = await _context.Playlists.FindAsync(playlistId);
+        if (playlist != null && playlist.CreatorId==userId) //only delete the playlist if the user created it
         {
-            Console.WriteLine("No playlists for this user.");
-        }
-        return user.Playlists ?? new List<Playlist>();
-    }
-
-    public static void CreatePlaylistForUser(User user, int id, string name, string description)
-    {
-        var newPlaylist = new Playlist(id, name, description);
-        PlaylistService.AddPlaylist(newPlaylist);
-        if (user.Playlists == null)
-        {
-            user.Playlists = new List<Playlist>();
-        }
-        user.Playlists.Add(newPlaylist);
-    }
-
-    public static void RemovePlaylistFromUser(User user, Playlist playlist)
-    {
-        if (user.Playlists != null)
-        {
-            user.Playlists.Remove(playlist);
+            _context.Playlists.Remove(playlist);
+            await _context.SaveChangesAsync();
         }
     }
 }

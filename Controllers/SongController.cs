@@ -8,50 +8,54 @@ namespace PlaylistControl.Controllers;
 [Route("[controller]")]
 public class SongController : ControllerBase
 {
-    public SongController()
+    private readonly SongService _songService;
+    private readonly PlaylistService _playlistService;
+
+    public SongController(SongService songService, PlaylistService playlistService)
     {
+        _songService = songService;
+        _playlistService = playlistService;
     }
 
     // GET all action
     [HttpGet]
-    public ActionResult<ICollection<Song>> GetAll() =>
-        SongService.GetAll();
+    public async Task<ActionResult<ICollection<Song>>> GetAll()
+    {
+        var songs = await _songService.GetAll();
+        return Ok(songs);
+    }
 
     // GET by Id action
     [HttpGet("{songId}")]
-    public ActionResult<Song> Get(int songId)
+    public async Task<ActionResult<Song>> Get(int songId)
     {
-        var song = SongService.GetAll().FirstOrDefault(s => s.Id == songId);
-
+        var song = await _songService.GetSongById(songId);
         if(song == null)
             return NotFound();
-
-        return song;
+        return Ok(song);
     }
 
     // GET song details action
     [HttpGet("{songId}/details")]
-    public ActionResult<string> GetSongDetails(int songId)
+    public async Task<ActionResult<string>> GetSongDetails(int songId)
     {
-        var song = SongService.GetAll().FirstOrDefault(s => s.Id == songId);
-
+        var song = await _songService.GetSongById(songId);
         if(song == null)
             return NotFound();
-
-        return SongService.GetSongDetails(song);
+        return Ok(_songService.GetSongDetails(song));
     }
 
     // Add song to playlist action
     [HttpPost("{songId}/addToPlaylist/{playlistId}")]
-    public ActionResult AddSongToPlaylist(int songId, int playlistId)
+    public async Task<ActionResult> AddSongToPlaylist(int songId, int playlistId)
     {
-        var song = SongService.GetSongById(songId);
-        var playlist = PlaylistService.GetPlaylistById(playlistId);
+        var song = await _songService.GetSongById(songId);
+        var playlist = await _playlistService.GetPlaylistById(playlistId);
 
         if(song == null || playlist == null)
             return NotFound();
 
-        PlaylistService.AddSongToPlaylist(playlist, song);
+        await _playlistService.AddSongToPlaylist(playlistId, songId);
         return Ok();
     }
     
