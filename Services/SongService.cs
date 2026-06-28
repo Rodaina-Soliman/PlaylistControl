@@ -36,11 +36,21 @@ public class SongService
 
     public async Task DeleteSong(int id)
     {
-        var song = await _context.Songs.FindAsync(id);
-        if (song != null)
+        var song = await _context.Songs
+        .Include(s => s.SongPlaylists)
+        .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (song == null) 
+            return;
+
+        if (song.SongPlaylists != null && song.SongPlaylists.Any())
         {
-            _context.Songs.Remove(song);
+            _context.SongPlaylists.RemoveRange(song.SongPlaylists);
             await _context.SaveChangesAsync();
         }
+        
+        _context.Songs.Remove(song);
+        await _context.SaveChangesAsync();
+        
     }
 }

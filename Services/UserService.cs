@@ -1,19 +1,26 @@
 namespace PlaylistControl.Services;
 
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Update.Internal;
 using PlaylistControl.Data;
 using PlaylistControl.Models;
 
 public class UserService
 {
-
     private readonly PlaylistControlDbContext _context;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(PlaylistControlDbContext context)
+    public UserService(PlaylistControlDbContext context, ILogger<UserService> logger = null)
     {
         _context = context;
+        _logger = logger;
+    }
+
+    private void Log(string message)
+    {
+        if (_logger != null)
+            _logger.LogInformation(message);
+        else
+            Console.WriteLine(message);
     }
 
     public async Task Add(User user)
@@ -24,9 +31,47 @@ public class UserService
 
     public async Task Delete(int id)
     {
-        User? user = await _context.Users.FindAsync(id);
-        if (user==null)
-            return;
+
+        var user = await _context.Users
+        .Include(u => u.UserPlaylists)
+        .Include(u => u.MyPlaylists)
+        .ThenInclude(p => p.UserPlaylists)
+        .Include(u => u.MyPlaylists)
+        .ThenInclude(p => p.SongPlaylists)
+        .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null) return;
+
+
+        if (user.UserPlaylists.Any())
+        {
+            _context.UserPlaylists.RemoveRange(user.UserPlaylists);
+            await _context.SaveChangesAsync();
+        }
+
+        foreach (var playlist in user.MyPlaylists.ToList())
+        {
+
+            var userPlaylistsForPlaylist = await _context.UserPlaylists.Where(up => up.PlaylistId == playlist.Id).ToListAsync();
+
+            if (userPlaylistsForPlaylist.Any())
+            {
+                _context.UserPlaylists.RemoveRange(userPlaylistsForPlaylist);
+                await _context.SaveChangesAsync();
+            }
+
+            var songPlaylistsForPlaylist = await _context.SongPlaylists.Where(sp => sp.PlaylistId == playlist.Id).ToListAsync();
+
+            if (songPlaylistsForPlaylist.Any())
+            {
+                _context.SongPlaylists.RemoveRange(songPlaylistsForPlaylist);
+                await _context.SaveChangesAsync();
+            }
+
+            _context.Playlists.Remove(playlist);
+            await _context.SaveChangesAsync();
+        }
+
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
     }
@@ -43,13 +88,18 @@ public class UserService
 
     public async Task<ICollection<Playlist>> ListPlaylistsForUser(int userId)
     {
-        return await _context.UserPlaylists.Where(up => up.UserId == userId).Include(up => up.Playlist).Select(up => up.Playlist).AsNoTracking().ToListAsync() ?? new List<Playlist>();
+        return await _context.UserPlaylists
+            .Where(up => up.UserId == userId)
+            .Include(up => up.Playlist)
+            .Select(up => up.Playlist)
+            .AsNoTracking()
+            .ToListAsync() ?? new List<Playlist>();
     }
 
-    public async Task<Boolean> PlaylistBelongsToUser(int playlistId, int userId)
+    public async Task<bool> PlaylistBelongsToUser(int playlistId, int userId)
     {
-        var exists = await _context.UserPlaylists.FirstOrDefaultAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
-        return exists != null;
+        return await _context.UserPlaylists
+            .AnyAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
     }
 
     public async Task CreatePlaylistForUser(User user, Playlist playlist)
@@ -57,35 +107,63 @@ public class UserService
         var newPlaylist = new Playlist(playlist.Name, playlist.Description, user.Id);
         await _context.Playlists.AddAsync(newPlaylist);
         await _context.SaveChangesAsync();
-        
+
         var userPlaylist = new UserPlaylist(user.Id, newPlaylist.Id);
-        
         await _context.UserPlaylists.AddAsync(userPlaylist);
         await _context.SaveChangesAsync();
     }
 
     public async Task AddPlaylistForUser(int userId, int playlistId)
     {
-        var userPlaylist = new UserPlaylist(userId, playlistId);
-        await _context.UserPlaylists.AddAsync(userPlaylist);
-        await _context.SaveChangesAsync();
+        var exists = await _context.UserPlaylists
+            .AnyAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
+
+        if (!exists)
+        {
+            var userPlaylist = new UserPlaylist(userId, playlistId);
+            await _context.UserPlaylists.AddAsync(userPlaylist);
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task RemovePlaylistFromUser(int userId, int playlistId)
     {
-        var userPlaylist = await _context.UserPlaylists.FirstOrDefaultAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
-        
-        if (userPlaylist != null)
+        var userPlaylist = await _context.UserPlaylists
+            .FirstOrDefaultAsync(up => up.UserId == userId && up.PlaylistId == playlistId);
+
+        if (userPlaylist == null)
+            return;
+
+        var playlist = await _context.Playlists
+            .Include(p => p.UserPlaylists)
+            .Include(p => p.SongPlaylists)
+            .FirstOrDefaultAsync(p => p.Id == playlistId);
+
+        if (playlist == null)
+            return;
+
+        var isCreator = playlist.CreatorId == userId;
+
+        // Remove the user's association
+        _context.UserPlaylists.Remove(userPlaylist);
+        await _context.SaveChangesAsync();
+
+        // If the user is the creator and no one else has it saved, delete the playlist
+        if (isCreator)
         {
-            _context.UserPlaylists.Remove(userPlaylist);
-            await _context.SaveChangesAsync();
-        }
-        
-        var playlist = await _context.Playlists.FindAsync(playlistId);
-        if (playlist != null && playlist.CreatorId==userId) //only delete the playlist if the user created it
-        {
-            _context.Playlists.Remove(playlist);
-            await _context.SaveChangesAsync();
+            var otherUsersHaveIt = await _context.UserPlaylists
+                .AnyAsync(up => up.PlaylistId == playlistId);
+
+            if (!otherUsersHaveIt)
+            {
+                if (playlist.SongPlaylists.Any())
+                {
+                    _context.SongPlaylists.RemoveRange(playlist.SongPlaylists);
+                }
+
+                _context.Playlists.Remove(playlist);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

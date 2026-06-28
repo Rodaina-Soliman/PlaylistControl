@@ -18,28 +18,28 @@ GET {{PlaylistControl_HostAddress}}/user/
 Accept: application/json
 
 ### Deleting users
-DELETE {{PlaylistControl_HostAddress}}/user/1/
+DELETE {{PlaylistControl_HostAddress}}/user/2/
 Accept: application/json
 
 ### Creating playlists
-POST {{PlaylistControl_HostAddress}}/user/3/playlists/
+POST {{PlaylistControl_HostAddress}}/user/2/playlists/
 Content-Type: application/json
 
 {
     "Name": "Playlist 3",
-    "Description": "Playful and energetic"
+    "Description": "Description 3"
 }
 
 ### Adding playlist
-POST {{PlaylistControl_HostAddress}}/user/2/playlists/11/
+POST {{PlaylistControl_HostAddress}}/user/3/playlists/3/
 Accept: application/json
 
 ### Getting user playlists
-GET {{PlaylistControl_HostAddress}}/user/2/playlists/
+GET {{PlaylistControl_HostAddress}}/user/3/playlists/
 Accept: application/json
 
 ### Removing user playlists
-DELETE {{PlaylistControl_HostAddress}}/user/2/playlists/11/
+DELETE {{PlaylistControl_HostAddress}}/user/1/playlists/2/
 Accept: application/json
 
 ### Adding songs
@@ -67,14 +67,14 @@ DELETE  {{PlaylistControl_HostAddress}}/song/1
 Accept: application/json
 
 ### Add song to playlist
-POST {{PlaylistControl_HostAddress}}/user/2/songs/2/addToPlaylist/13/
+POST {{PlaylistControl_HostAddress}}/user/2/songs/2/addToPlaylist/3/
 
 ### Getting songs in playlist
-GET {{PlaylistControl_HostAddress}}/playlist/13/songs/
+GET {{PlaylistControl_HostAddress}}/playlist/3/songs/
 Accept: application/json
 
 ### Remove song from playlist
-DELETE {{PlaylistControl_HostAddress}}/user/2/playlists/13/RemoveFromPlaylist/2/
+DELETE {{PlaylistControl_HostAddress}}/user/2/playlists/3/RemoveFromPlaylist/1/
 Accept: application/json
 
 ### Getting playlists
@@ -82,5 +82,5 @@ GET {{PlaylistControl_HostAddress}}/playlist/
 Accept: application/json
 
 ### Getting playlists by id
-GET {{PlaylistControl_HostAddress}}/playlist/14/
+GET {{PlaylistControl_HostAddress}}/playlist/3/
 Accept: application/json
