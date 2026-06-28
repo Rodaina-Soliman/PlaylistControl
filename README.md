@@ -1,4 +1,3 @@
-```markdown
 # Playlist Control API
 
 A RESTful API for managing users, playlists, and songs. Built with ASP.NET Core Web API and Entity Framework Core.
