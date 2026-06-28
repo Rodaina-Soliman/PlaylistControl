@@ -53,4 +53,21 @@ public class SongService
         await _context.SaveChangesAsync();
         
     }
+
+    public async Task UpdateSong(int songId, Song updatedSong)
+    {
+        var song = await _context.Songs.FindAsync(songId);
+        if (song == null)
+            return;
+
+        song.Title = updatedSong.Title ?? song.Title;
+        song.Artist = updatedSong.Artist ?? song.Artist;
+        song.Album = updatedSong.Album ?? song.Album;
+        song.Year = updatedSong.Year ?? song.Year;
+        song.Genre = updatedSong.Genre ?? song.Genre;
+        
+        _context.Songs.Update(song);
+        await _context.SaveChangesAsync();
+    }
+
 }

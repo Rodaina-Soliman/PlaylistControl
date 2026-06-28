@@ -4,7 +4,6 @@ GET {{PlaylistControl_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ### Inserting users
-
 POST {{PlaylistControl_HostAddress}}/user/
 Content-Type: application/json
 
@@ -12,8 +11,15 @@ Content-Type: application/json
     "Name": "User 3"
 }
 
-### Getting users
+### Updating users
+PUT {{PlaylistControl_HostAddress}}/user/3/
+Content-Type: application/json
 
+{
+    "Name": "Wagdi"
+}
+
+### Getting users
 GET {{PlaylistControl_HostAddress}}/user/
 Accept: application/json
 
@@ -22,12 +28,20 @@ DELETE {{PlaylistControl_HostAddress}}/user/2/
 Accept: application/json
 
 ### Creating playlists
-POST {{PlaylistControl_HostAddress}}/user/2/playlists/
+POST {{PlaylistControl_HostAddress}}/user/3/playlists/
 Content-Type: application/json
 
 {
-    "Name": "Playlist 3",
-    "Description": "Description 3"
+    "Name": "Playlist 4",
+    "Description": "Description 4"
+}
+
+### Updating playlist info
+PUT {{PlaylistControl_HostAddress}}/user/3/playlists/4/
+Content-Type: application/json
+
+{
+    "Description": "Goodness"
 }
 
 ### Adding playlist
@@ -47,11 +61,19 @@ POST {{PlaylistControl_HostAddress}}/song/
 Content-Type: application/json
 
 {
-    "Title": "Over the horizon",
-    "Artist": "Samsung",
-    "Album": "Ringtones",
+    "Title": "Title 2",
+    "Artist": "Artist 2",
+    "Album": "Album 2",
     "Year": 2026,
-    "Genre": "Fun"
+    "Genre": "Genre 2"
+}
+
+### Updating songs
+PUT {{PlaylistControl_HostAddress}}/song/3/
+Content-Type: application/json
+
+{
+    "Genre": "Quirky"
 }
 
 ### Getting songs

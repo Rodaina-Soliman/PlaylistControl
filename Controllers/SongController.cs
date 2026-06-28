@@ -67,4 +67,16 @@ public class SongController : ControllerBase
         return Ok();
     }
 
+    // PUT update song action
+    [HttpPut("{songId}")]
+    public async Task<ActionResult> UpdateSong(int songId, [FromBody] Song updatedSong)
+    {
+        var existingSong = await _songService.GetSongById(songId);
+        if (existingSong == null)
+            return NotFound();
+
+        await _songService.UpdateSong(songId, updatedSong);
+        return Ok();
+    }
+
 }

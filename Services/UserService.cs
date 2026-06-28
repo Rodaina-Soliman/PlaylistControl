@@ -3,24 +3,13 @@ namespace PlaylistControl.Services;
 using Microsoft.EntityFrameworkCore;
 using PlaylistControl.Data;
 using PlaylistControl.Models;
-
 public class UserService
 {
     private readonly PlaylistControlDbContext _context;
-    private readonly ILogger<UserService> _logger;
 
-    public UserService(PlaylistControlDbContext context, ILogger<UserService> logger = null)
+    public UserService(PlaylistControlDbContext context)
     {
         _context = context;
-        _logger = logger;
-    }
-
-    private void Log(string message)
-    {
-        if (_logger != null)
-            _logger.LogInformation(message);
-        else
-            Console.WriteLine(message);
     }
 
     public async Task Add(User user)
@@ -144,11 +133,9 @@ public class UserService
 
         var isCreator = playlist.CreatorId == userId;
 
-        // Remove the user's association
         _context.UserPlaylists.Remove(userPlaylist);
         await _context.SaveChangesAsync();
 
-        // If the user is the creator and no one else has it saved, delete the playlist
         if (isCreator)
         {
             var otherUsersHaveIt = await _context.UserPlaylists
@@ -166,4 +153,16 @@ public class UserService
             }
         }
     }
+
+    public async Task UpdateUser(int userId, User updatedUser)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            return;
+
+        user.Name = updatedUser.Name ?? user.Name;
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+    }
+
 }

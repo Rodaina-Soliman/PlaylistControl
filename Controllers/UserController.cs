@@ -94,6 +94,20 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    // PUT update playlist action
+    [HttpPut("{userId}/playlists/{playlistId}")]
+    public async Task<ActionResult> UpdatePlaylist(int userId, int playlistId, [FromBody] Playlist updatedPlaylist)
+    {
+        var belongsToUser = await _userService.PlaylistBelongsToUser(playlistId, userId);
+
+        var existingPlaylist = await _playlistService.GetPlaylistById(playlistId);
+        if (existingPlaylist == null || !belongsToUser)
+            return NotFound();
+
+        await _playlistService.UpdatePlaylist(playlistId, updatedPlaylist);
+        return Ok();
+    }
+
     // Add song to playlist action
     [HttpPost("{userId}/songs/{songId}/addToPlaylist/{playlistId}")]
     public async Task<ActionResult> AddSongToPlaylist(int songId, int playlistId, int userId)
@@ -142,6 +156,18 @@ public class UserController : ControllerBase
             return NotFound();
         }
         await _userService.Delete(userId);
+        return Ok();
+    }
+
+    // PUT update user
+    [HttpPut("{userId}")]
+    public async Task<ActionResult> UpdateUser(int userId, [FromBody] User updatedUser)
+    {
+        var existingUser = await _userService.GetUserById(userId);
+        if (existingUser == null)
+            return NotFound();
+
+        await _userService.UpdateUser(userId, updatedUser);
         return Ok();
     }
 

@@ -55,4 +55,18 @@ public class PlaylistService
         _context.SongPlaylists.Remove(songplaylist);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdatePlaylist(int playlistId, Playlist updatedPlaylist)
+    {
+        var playlist = await _context.Playlists.FindAsync(playlistId);
+        if (playlist == null)
+            return;
+
+        playlist.Name = updatedPlaylist.Name ?? playlist.Name;
+        playlist.Description = updatedPlaylist.Description ?? playlist.Description;
+        
+        _context.Playlists.Update(playlist);
+        await _context.SaveChangesAsync();
+    }
+
 }
