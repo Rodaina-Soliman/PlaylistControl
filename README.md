@@ -2,16 +2,6 @@
 
 A RESTful API for managing users, playlists, and songs. Built with ASP.NET Core Web API and Entity Framework Core.
 
-## Table of Contents
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Database Setup](#database-setup)
-- [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [API Endpoints](#api-endpoints)
-- [Project Structure](#project-structure)
-- [Technologies Used](#technologies-used)
-
 ## Prerequisites
 
 Before running this application, ensure you have the following installed:
