@@ -296,7 +296,7 @@ PlaylistControl.IntegrationTests/
 | **Domain** | *(none)* |
 | **Application** | `MediatR`, `FluentValidation`, `FluentValidation.DependencyInjectionExtensions` |
 | **Infrastructure** | `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design` |
-| **UnitTests** | `Microsoft.NET.Test.Sdk`, `xunit`, `xunit.runner.visualstudio`, `Moq`, `FluentAssertions` |
+| **UnitTests** | `Microsoft.NET.Test.Sdk`, `xunit`, `xunit.runner.visualstudio`, `Moq`, `AutoFixture`, `FluentAssertions` |
 | **IntegrationTests** | `Microsoft.NET.Test.Sdk`, `xunit`, `xunit.runner.visualstudio`, `Microsoft.AspNetCore.Mvc.Testing` |
 
 ---

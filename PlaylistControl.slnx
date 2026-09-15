@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="PlaylistControl.Api/PlaylistControl.Api.csproj" />
+    <Project Path="PlaylistControl.Application/PlaylistControl.Application.csproj" />
+    <Project Path="PlaylistControl.Domain/PlaylistControl.Domain.csproj" />
+    <Project Path="PlaylistControl.Infrastructure/PlaylistControl.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="PlaylistControl.IntegrationTests/PlaylistControl.IntegrationTests.csproj" />
+    <Project Path="PlaylistControl.UnitTests/PlaylistControl.UnitTests.csproj" />
+  </Folder>
+</Solution>
