@@ -11,7 +11,7 @@ A RESTful API for managing users, playlists, and songs. Built with ASP.NET Core 
 ### Solution-Level Structure
 
 ```
-PlaylistControl.sln
+PlaylistControl.slnx
 ├── src/
 │   ├── PlaylistControl.Domain/
 │   ├── PlaylistControl.Application/
@@ -198,7 +198,7 @@ PlaylistControl.Infrastructure/
 | `PlaylistReadRepository.cs` | Implements `IPlaylistReadRepository`. Pure read queries against the read context. |
 | `UserReadRepository.cs` | Implements `IUserReadRepository`. Read-only queries against `Users`. |
 | `SongReadRepository.cs` | Implements `ISongReadRepository`. Read-only queries against `Songs`. |
-| `DatabaseSeeder.cs` | Seeds static Users and Songs via the **Write context** (source of truth). Because both contexts point at the same database, the read context sees the same rows. Idempotent. |
+| `DatabaseSeeder.cs` | Seeds static Users and Songs via the **Write context** (source of truth). Because both contexts point at the same database, the read context sees the same rows. |
 | `DependencyInjection.cs` | `AddInfrastructure(connectionString)` — registers both contexts (same connection string), all four repositories. |
 
 ---
