@@ -93,9 +93,17 @@ namespace PlaylistControl.Infrastructure.Persistence.Read.Repositories
         public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Checking playlist existence in repository...");
-            var exists = await _context.Playlists
-                .AnyAsync(p => p.Id == id, cancellationToken);
+            var exists = await _context.Playlists.AnyAsync(p => p.Id == id, cancellationToken);
             _logger.LogInformation("Checked playlist existence in repository.");
+            return exists;
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> IsInUserLibraryAsync(Guid userId, Guid playlistId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Checking user library membership in repository...");
+            var exists = await _context.UserPlaylists.AnyAsync(up => up.UserId == userId && up.PlaylistId == playlistId, cancellationToken);
+            _logger.LogInformation("Checked user library membership in repository.");
             return exists;
         }
     }

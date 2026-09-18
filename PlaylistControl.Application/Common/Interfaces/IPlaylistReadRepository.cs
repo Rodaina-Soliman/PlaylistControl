@@ -53,4 +53,13 @@ public interface IPlaylistReadRepository
     /// <param name="cancellationToken">Token to cancel the operation</param>
     /// <returns>True if the Playlist exists, false otherwise</returns>
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks whether the given Playlist appears in the given User's library
+    /// </summary>
+    /// <param name="userId">Unique identifier of the User</param>
+    /// <param name="playlistId">Unique identifier of the Playlist</param>
+    /// <param name="cancellationToken">Token to cancel the operation</param>
+    /// <returns>True if the Playlist is in the User's library, false otherwise</returns>
+    Task<bool> IsInUserLibraryAsync(Guid userId, Guid playlistId, CancellationToken cancellationToken = default);
 }
