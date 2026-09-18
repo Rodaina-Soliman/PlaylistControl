@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PlaylistControl.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace PlaylistControl.Infrastructure.Persistence.Write
 {

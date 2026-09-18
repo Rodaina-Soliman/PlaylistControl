@@ -32,7 +32,8 @@ PlaylistControl.Domain/
 │   ├── User.cs
 │   ├── Song.cs
 │   ├── Playlist.cs
-│   └── UserPlaylist.cs
+│   ├── UserPlaylist.cs
+│   └── SongPlaylist.cs
 └── Exceptions/
     ├── DomainException.cs
     ├── PlaylistNotFoundException.cs
@@ -42,20 +43,21 @@ PlaylistControl.Domain/
     └── PrivatePlaylistAccessException.cs
 ```
 
-#### File Responsibilities
+##### File Responsibilities
 
 | File | Responsibility |
 |---|---|
-| `User.cs` | User entity. Properties: `Id`, `Username`, `Email`, `CreatedAt`. Seeded only. |
-| `Song.cs` | Song entity. Properties: `Id`, `Title`, `Artist`, `DurationSeconds`. Seeded only. |
-| `Playlist.cs` | Aggregate root. Properties: `Id`, `Name`, `IsPublic`, `OwnerId`, `CreatedAt`. Navigation: `ICollection<UserPlaylist>`. Business methods: `Rename`, `ChangePrivacy`, `AddSong`, `RemoveSong`, `CanBeViewedBy`. Ownership and privacy rules live here. |
-| `UserPlaylist.cs` | Join entity linking `User` and `Playlist`. Composite key `(UserId, PlaylistId)`. Property: `AddedAt`. Decouples ownership from library membership. |
+| `User.cs` | User entity. Properties: `Id`, `Username`, `Email`, `CreatedAt`. Navigation: `ICollection<UserPlaylist>`. Seeded only. |
+| `Song.cs` | Song entity. Properties: `Id`, `Title`, `Artist`, `DurationSeconds`. Navigation: `ICollection<SongPlaylist>`. Seeded only. |
+| `Playlist.cs` | Aggregate root. Properties: `Id`, `Name`, `IsPublic`, `OwnerId`, `CreatedAt`. Navigation: `Owner`, `ICollection<UserPlaylist>`, `ICollection<SongPlaylist>`. Ownership and privacy rules are enforced in handlers, not here. |
+| `UserPlaylist.cs` | Join entity linking `User` and `Playlist`. Composite key `(UserId, PlaylistId)`. Property: `AddedAt`. Navigation: `User`, `Playlist`. Decouples ownership from library membership. |
+| `SongPlaylist.cs` | Join entity linking `Song` and `Playlist`. Composite key `(SongId, PlaylistId)`. Property: `AddedAt`. Navigation: `Song`, `Playlist`. |
 | `DomainException.cs` | Base custom exception for domain rule violations. |
-| `PlaylistNotFoundException.cs` | Thrown when a playlist ID doesn't resolve. |
-| `UserNotFoundException.cs` | Thrown when a user ID doesn't resolve. |
-| `SongNotFoundException.cs` | Thrown when a song ID doesn't resolve. |
-| `NotPlaylistOwnerException.cs` | Thrown when a non-owner attempts an owner-only action. |
-| `PrivatePlaylistAccessException.cs` | Thrown when a non-owner tries to view a private playlist. |
+| `PlaylistNotFoundException.cs` | Thrown when a playlist ID doesn't resolve. Inherits `Exception` (not `DomainException`). |
+| `UserNotFoundException.cs` | Thrown when a user ID doesn't resolve. Inherits `DomainException`. |
+| `SongNotFoundException.cs` | Thrown when a song ID doesn't resolve. Inherits `DomainException`. |
+| `NotPlaylistOwnerException.cs` | Thrown when a non-owner attempts an owner-only action. Inherits `DomainException`. |
+| `PrivatePlaylistAccessException.cs` | Thrown when a non-owner tries to view a private playlist. Inherits `DomainException`. |
 
 ---
 
@@ -166,7 +168,8 @@ PlaylistControl.Infrastructure/
 │   │   ├── PlaylistWriteDbContext.cs
 │   │   ├── Configurations/
 │   │   │   ├── PlaylistConfiguration.cs
-│   │   │   └── UserPlaylistConfiguration.cs
+│   │   │   ├── UserPlaylistConfiguration.cs
+│   │   │   └── SongPlaylistConfiguration.cs
 │   │   └── Repositories/
 │   │       └── PlaylistWriteRepository.cs
 │   ├── Read/
@@ -175,7 +178,8 @@ PlaylistControl.Infrastructure/
 │   │   │   ├── UserConfiguration.cs
 │   │   │   ├── SongConfiguration.cs
 │   │   │   ├── PlaylistConfiguration.cs
-│   │   │   └── UserPlaylistConfiguration.cs
+│   │   │   ├── UserPlaylistConfiguration.cs
+│   │   │   └── SongPlaylistConfiguration.cs
 │   │   └── Repositories/
 │   │       ├── PlaylistReadRepository.cs
 │   │       ├── UserReadRepository.cs
@@ -190,16 +194,22 @@ PlaylistControl.Infrastructure/
 
 | File | Responsibility |
 |---|---|
-| `PlaylistWriteDbContext.cs` | Write-side `DbContext`. DbSets: **only** `Playlists`, `UserPlaylists`. Users and Songs are seed-only and never written by the API, so they are absent here. This is the real CQRS separation. |
-| `PlaylistWriteDbContext` Configurations | `PlaylistConfiguration.cs`, `UserPlaylistConfiguration.cs` — write-side EF configurations. |
-| `PlaylistWriteRepository.cs` | Implements `IPlaylistWriteRepository`. Performs mutations and exposes `SaveChangesAsync` via the write context. Does **not** auto-save. |
-| `PlaylistReadDbContext.cs` | Read-side `DbContext`. DbSets: `Users`, `Songs`, `Playlists`, `UserPlaylists`. Sets `QueryTrackingBehavior.NoTracking` in `OnConfiguring`. Overrides `SaveChanges` / `SaveChangesAsync` to throw `InvalidOperationException` — enforces read-only at the type level. |
-| `PlaylistReadDbContext` Configurations | `UserConfiguration.cs`, `SongConfiguration.cs`, `PlaylistConfiguration.cs`, `UserPlaylistConfiguration.cs` — read-side EF configurations mirroring the schema. |
-| `PlaylistReadRepository.cs` | Implements `IPlaylistReadRepository`. Pure read queries against the read context. |
-| `UserReadRepository.cs` | Implements `IUserReadRepository`. Read-only queries against `Users`. |
-| `SongReadRepository.cs` | Implements `ISongReadRepository`. Read-only queries against `Songs`. |
-| `DatabaseSeeder.cs` | Seeds static Users and Songs via the **Write context** (source of truth). Because both contexts point at the same database, the read context sees the same rows. |
-| `DependencyInjection.cs` | `AddInfrastructure(connectionString)` — registers both contexts (same connection string), all four repositories. |
+| `PlaylistWriteDbContext.cs` | Write-side `DbContext`. DbSets: `Playlists`, `UserPlaylists`, `SongPlaylists`. Applies only configurations whose namespace contains `Persistence.Write.Configurations`. Note: `User` and `Song` are seeded via `Set<User>()` / `Set<Song>()` (they resolve from the read-side configuration assembly, not a write-side config). |
+| `Write/Configurations/PlaylistConfiguration.cs` | Configures `Playlist`: table `Playlists`, PK `Id`, `Name` required max 200, `IsPublic` required, `CreatedAt` required. `Owner` → many with `OwnerId` FK, `DeleteBehavior.Restrict`. `UserPlaylists` and `SongPlaylists` cascades. |
+| `Write/Configurations/UserPlaylistConfiguration.cs` | Configures `UserPlaylist`: table `UserPlaylists`, composite PK `(UserId, PlaylistId)`, `AddedAt` required, `User` → many with `UserId` FK, `DeleteBehavior.Restrict`. |
+| `Write/Configurations/SongPlaylistConfiguration.cs` | Configures `SongPlaylist`: table `SongPlaylists`, composite PK `(SongId, PlaylistId)`, `AddedAt` required, `Song` → many with `SongId` FK, `DeleteBehavior.Restrict`. |
+| `PlaylistWriteRepository.cs` | Implements `IPlaylistWriteRepository`. Methods: `AddAsync`, `DeleteAsync`, `GetByIdWithSongsForUpdateAsync`, `GetByIdForUpdateAsync`, `GetUserPlaylistEntryAsync`, `AddUserPlaylistEntryAsync`, `RemoveUserPlaylistEntryAsync`, `AddSongPlaylistEntryAsync`, `RemoveSongPlaylistEntryAsync`, `SaveChangesAsync`. Does **not** auto-save — handlers call `SaveChangesAsync` explicitly. |
+| `PlaylistReadDbContext.cs` | Read-side `DbContext`. DbSets: `Users`, `Songs`, `Playlists`, `UserPlaylists`, `SongPlaylists`. Sets `QueryTrackingBehavior.NoTracking` in `OnConfiguring`. Applies only configurations whose namespace contains `Persistence.Read.Configurations`. Overrides `SaveChanges` / `SaveChangesAsync` to throw `InvalidOperationException` — enforces read-only at the type level. |
+| `Read/Configurations/UserConfiguration.cs` | Configures `User`: table `Users`, PK `Id`, `Username` required max 100, `Email` required max 200, `CreatedAt` required. |
+| `Read/Configurations/SongConfiguration.cs` | Configures `Song`: table `Songs`, PK `Id`, `Title` required max 200, `Artist` required max 200, `DurationSeconds` required. |
+| `Read/Configurations/PlaylistConfiguration.cs` | Mirrors the write-side `Playlist` config (table, PK, property constraints, `Owner` FK with `Restrict`). Join navigations are mapped without explicit delete behavior. |
+| `Read/Configurations/UserPlaylistConfiguration.cs` | Mirrors the write-side `UserPlaylist` config: composite PK `(UserId, PlaylistId)`, `AddedAt` required, `User` → many, `Playlist` → many. |
+| `Read/Configurations/SongPlaylistConfiguration.cs` | Mirrors the write-side `SongPlaylist` config: composite PK `(SongId, PlaylistId)`, `AddedAt` required, `Song` → many, `Playlist` → many. |
+| `PlaylistReadRepository.cs` | Implements `IPlaylistReadRepository`. Methods: `GetByIdAsync` (includes `Owner`), `GetByIdWithSongsAsync` (includes `SongPlaylists.Song`), `GetAllPublicAsync` (public only, includes `Owner` + `SongPlaylists`), `GetByOwnerAsync` (includes `Owner` + `SongPlaylists`), `GetUserLibraryAsync` (via `UserPlaylists`, projects to `Playlist` with `Owner` + `SongPlaylists`), `ExistsAsync`. No tracking. |
+| `UserReadRepository.cs` | Implements `IUserReadRepository`. Methods: `GetByIdAsync`, `GetAllAsync`, `ExistsAsync`. Read-only queries against `Users`. |
+| `SongReadRepository.cs` | Implements `ISongReadRepository`. Methods: `GetByIdAsync`, `GetAllAsync`, `ExistsAsync`. Read-only queries against `Songs`. |
+| `Seed/DatabaseSeeder.cs` | Static seeder. Seeds 3 Users (alice, bob, carol) and 5 Songs (Bohemian Rhapsody, Hotel California, Stairway to Heaven, Imagine, Smells Like Teen Spirit) via `PlaylistWriteDbContext` using `Set<User>()` / `Set<Song>()`, guarded by `AnyAsync()` checks. Because both contexts point at the same database, the read context sees the same rows. |
+| `DependencyInjection.cs` | `AddInfrastructure(services, configuration)` — reads `DefaultConnection` (throws `InvalidOperationException` if missing), registers `PlaylistWriteDbContext` and `PlaylistReadDbContext` (both `UseSqlServer` with the same connection string), and registers `IPlaylistWriteRepository`, `IPlaylistReadRepository`, `IUserReadRepository`, `ISongReadRepository` as scoped. |
 
 ---
 

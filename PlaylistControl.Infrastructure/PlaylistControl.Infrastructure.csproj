@@ -14,4 +14,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PlaylistControl.Application\PlaylistControl.Application.csproj" />
+    <ProjectReference Include="..\PlaylistControl.Domain\PlaylistControl.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

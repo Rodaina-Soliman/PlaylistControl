@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PlaylistControl.Domain.Exceptions
+﻿namespace PlaylistControl.Domain.Exceptions
 {
     /// <summary>
     /// Exception specifying user was not found

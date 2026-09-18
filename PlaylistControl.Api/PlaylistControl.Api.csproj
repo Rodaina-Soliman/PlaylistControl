@@ -6,4 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PlaylistControl.Application\PlaylistControl.Application.csproj" />
+    <ProjectReference Include="..\PlaylistControl.Infrastructure\PlaylistControl.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
