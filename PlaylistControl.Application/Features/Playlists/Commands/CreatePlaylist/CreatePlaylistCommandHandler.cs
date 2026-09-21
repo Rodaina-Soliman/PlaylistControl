@@ -28,9 +28,7 @@ namespace PlaylistControl.Application.Features.Playlists.Commands.CreatePlaylist
         public async Task<Guid> Handle(CreatePlaylistCommand request, CancellationToken cancellationToken)
         {
             if (!await _userReadRepository.ExistsAsync(request.RequesterId, cancellationToken))
-            {
                 throw new UserNotFoundException(request.RequesterId);
-            }
 
             var playlist = new Playlist
             {
