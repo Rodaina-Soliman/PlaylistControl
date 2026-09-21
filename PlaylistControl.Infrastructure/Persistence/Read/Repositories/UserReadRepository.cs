@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PlaylistControl.Application.Common.Interfaces;
+using PlaylistControl.Application.Common.Models;
 using PlaylistControl.Domain.Entities;
 
 namespace PlaylistControl.Infrastructure.Persistence.Read.Repositories
@@ -25,23 +26,22 @@ namespace PlaylistControl.Infrastructure.Persistence.Read.Repositories
         }
 
         /// <inheritdoc/>
-        public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<PagedResult<User>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Fetching user by id from repository...");
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-            _logger.LogInformation("Fetched user by id from repository.");
-            return user;
-        }
+            _logger.LogInformation("Fetching paged users from repository...");
 
-        /// <inheritdoc/>
-        public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            _logger.LogInformation("Fetching all users from repository...");
-            var users = await _context.Users
+            var query = _context.Users
+                .OrderBy(u => u.Username)
+                .ThenBy(u => u.Id);
+
+            var totalCount = await query.CountAsync(cancellationToken);
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(cancellationToken);
-            _logger.LogInformation("Fetched all users from repository.");
-            return users;
+
+            _logger.LogInformation("Fetched paged users from repository.");
+            return new PagedResult<User>(items, page, pageSize, totalCount);
         }
 
         /// <inheritdoc/>

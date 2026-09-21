@@ -3,7 +3,7 @@
     /// <summary>
     /// Exception specifying playlist was not found
     /// </summary>
-    public class PlaylistNotFoundException : Exception
+    public class PlaylistNotFoundException : DomainException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="PlaylistNotFoundException"/> class.
