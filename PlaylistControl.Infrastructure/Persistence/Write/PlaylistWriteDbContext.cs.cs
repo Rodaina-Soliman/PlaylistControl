@@ -14,6 +14,8 @@ namespace PlaylistControl.Infrastructure.Persistence.Write
         /// <param name="options">Options used by DbContext</param>
         public PlaylistWriteDbContext(DbContextOptions<PlaylistWriteDbContext> options) : base(options) { }
 
+        public DbSet<User> Users => Set<User>();
+        public DbSet<Song> Songs => Set<Song>();
         public DbSet<Playlist> Playlists => Set<Playlist>();
         public DbSet<UserPlaylist> UserPlaylists => Set<UserPlaylist>();
         public DbSet<SongPlaylist> SongPlaylists => Set<SongPlaylist>();

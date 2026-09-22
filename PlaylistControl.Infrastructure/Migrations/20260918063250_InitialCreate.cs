@@ -12,7 +12,7 @@ namespace PlaylistControl.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Song",
+                name: "Songs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -26,7 +26,7 @@ namespace PlaylistControl.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "User",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -55,7 +55,7 @@ namespace PlaylistControl.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_Playlists_User_OwnerId",
                         column: x => x.OwnerId,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -80,7 +80,7 @@ namespace PlaylistControl.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_SongPlaylists_Song_SongId",
                         column: x => x.SongId,
-                        principalTable: "Song",
+                        principalTable: "Songs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -105,7 +105,7 @@ namespace PlaylistControl.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_UserPlaylists_User_UserId",
                         column: x => x.UserId,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -136,13 +136,13 @@ namespace PlaylistControl.Infrastructure.Migrations
                 name: "UserPlaylists");
 
             migrationBuilder.DropTable(
-                name: "Song");
+                name: "Songs");
 
             migrationBuilder.DropTable(
                 name: "Playlists");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "Users");
         }
     }
 }

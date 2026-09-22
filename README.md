@@ -181,6 +181,8 @@ PlaylistControl.Infrastructure/
 │   ├── Write/
 │   │   ├── PlaylistWriteDbContext.cs
 │   │   ├── Configurations/
+│   │   │   ├── UserConfiguration.cs
+│   │   │   ├── SongConfiguration.cs
 │   │   │   ├── PlaylistConfiguration.cs
 │   │   │   ├── UserPlaylistConfiguration.cs
 │   │   │   └── SongPlaylistConfiguration.cs
@@ -209,6 +211,8 @@ PlaylistControl.Infrastructure/
 | File | Responsibility |
 |---|---|
 | `PlaylistWriteDbContext.cs` | Write-side `DbContext`. DbSets: `Playlists`, `UserPlaylists`, `SongPlaylists`. Applies only configurations whose namespace contains `Persistence.Write.Configurations`. Note: `User` and `Song` are seeded via `Set<User>()` / `Set<Song>()` (they resolve from the read-side configuration assembly, not a write-side config). |
+| `Write/Configurations/UserConfiguration.cs` | Configures `User`: table `Users`, PK `Id`, `Username` required max 100, `Email` required max 200, `CreatedAt` required. |
+| `Write/Configurations/SongConfiguration.cs` | Configures `Song`: table `Songs`, PK `Id`, `Title` required max 200, `Artist` required max 200, `DurationSeconds` required. |
 | `Write/Configurations/PlaylistConfiguration.cs` | Configures `Playlist`: table `Playlists`, PK `Id`, `Name` required max 200, `IsPublic` required, `CreatedAt` required. `Owner` → many with `OwnerId` FK, `DeleteBehavior.Restrict`. `UserPlaylists` and `SongPlaylists` cascades. |
 | `Write/Configurations/UserPlaylistConfiguration.cs` | Configures `UserPlaylist`: table `UserPlaylists`, composite PK `(UserId, PlaylistId)`, `AddedAt` required, `User` → many with `UserId` FK, `DeleteBehavior.Restrict`. |
 | `Write/Configurations/SongPlaylistConfiguration.cs` | Configures `SongPlaylist`: table `SongPlaylists`, composite PK `(SongId, PlaylistId)`, `AddedAt` required, `Song` → many with `SongId` FK, `DeleteBehavior.Restrict`. |
@@ -353,7 +357,9 @@ PlaylistControl.IntegrationTests/
 | **Application** | `MediatR`, `FluentValidation`, `FluentValidation.DependencyInjectionExtensions` |
 | **Infrastructure** | `Microsoft.EntityFrameworkCore.SqlServer`, `Microsoft.EntityFrameworkCore.Design` |
 | **UnitTests** | `Microsoft.NET.Test.Sdk`, `xunit`, `xunit.runner.visualstudio`, `Moq`, `AutoFixture`, `FluentAssertions`, `coverlet.collector` |
-| **IntegrationTests** | `Microsoft.NET.Test.Sdk`, `xunit`, `xunit.runner.visualstudio`, `Microsoft.AspNetCore.Mvc.Testing` |
+| **IntegrationTests** | `Microsoft.NET.Test.Sdk`, `xunit`, `xunit.runner.visualstudio`, `Microsoft.AspNetCore.Mvc.Testing`, `FluentAssertions`, `Microsoft.EntityFrameworkCore.Sqlite` |
+| **Api** | `Microsoft.EntityFrameworkCore.Design` |
+
 
 ---
 
